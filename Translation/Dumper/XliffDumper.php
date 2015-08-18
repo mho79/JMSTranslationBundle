@@ -93,27 +93,8 @@ class XliffDumper implements DumperInterface
         foreach ($catalogue->getDomain($domain)->all() as $id => $message) {
             $body->appendChild($unit = $doc->createElement('trans-unit'));
             $unit->setAttribute('id', hash('sha1', $id));
-            $unit->setAttribute('resname', $id);
+            $unit->setAttribute('resname', trim($id));
 
-            $unit->appendChild($source = $doc->createElement('source'));
-            if (preg_match('/[<>&]/', $message->getSourceString())) {
-                $source->appendChild($doc->createCDATASection($message->getSourceString()));
-            } else {
-                $source->appendChild($doc->createTextNode($message->getSourceString()));
-            }
-
-            $unit->appendChild($target = $doc->createElement('target'));
-            if (preg_match('/[<>&]/', $message->getLocaleString())) {
-                $target->appendChild($doc->createCDATASection($message->getLocaleString()));
-            } else {
-                $target->appendChild($doc->createTextNode($message->getLocaleString()));
-            }
-
-            if ($message->isNew()) {
-                $target->setAttribute('state', 'new');
-            }
-
-            // As per the OASIS XLIFF 1.2 non-XLIFF elements must be at the end of the <trans-unit>
             if ($sources = $message->getSources()) {
                 foreach ($sources as $source) {
                     if ($source instanceof FileSource) {
@@ -138,6 +119,23 @@ class XliffDumper implements DumperInterface
                 $unit->setAttribute('extradata', 'Meaning: '.$meaning);
             }
 
+            $unit->appendChild($source = $doc->createElement('source'));
+            if (preg_match('/[<>&]/', $message->getSourceString())) {
+                $source->appendChild($doc->createCDATASection(trim($message->getSourceString())));
+            } else {
+                $source->appendChild($doc->createTextNode(trim($message->getSourceString())));
+            }
+
+            $unit->appendChild($target = $doc->createElement('target'));
+            if (preg_match('/[<>&]/', $message->getLocaleString())) {
+                $target->appendChild($doc->createCDATASection(trim($message->getLocaleString())));
+            } else {
+                $target->appendChild($doc->createTextNode(trim($message->getLocaleString())));
+            }
+
+            if ($message->isNew()) {
+                $target->setAttribute('state', 'new');
+            }
         }
 
         return $doc->saveXML();
